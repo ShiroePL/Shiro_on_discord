@@ -68,6 +68,16 @@ async def askshiro_with_voice(interaction: discord.Interaction, question: str):
      # Schedule a coroutine to handle the OpenAI response
     bot.loop.create_task(bot_askshiro_voice.handle_openai_response_voice(interaction, question))
 
+    
+@bot.command(name='shutdown')
+@commands.is_owner()
+async def shutdown(ctx):
+    """Shuts down the bot."""
+    await ctx.send("Shutting down...")
+    await bot.close()
+
+
+
 # Login to Discord with the bot's token.
 bot.run(api_keys.token_key)
 
