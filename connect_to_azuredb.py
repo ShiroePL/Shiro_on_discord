@@ -1,6 +1,7 @@
 import pyodbc
 import api_keys
 import discord
+from db_config import conn
 server = api_keys.server_name
 database = api_keys.db_name
 username = api_keys.user_name
@@ -8,7 +9,7 @@ password = api_keys.db_password
 driver= '{ODBC Driver 18 for SQL Server}'
 
 def connect_to_azuredb_fn(question, answer):
-    conn = pyodbc.connect('DRIVER='+driver+';SERVER=tcp:'+server+';PORT=1433;DATABASE='+database+';UID='+username+';PWD='+ password)    
+    global conn    
     cursor = conn.cursor()
     sql = "INSERT INTO dbo.chatgpt_api (Question, Answer, added_time) VALUES (?, ?, SYSDATETIMEOFFSET() AT TIME ZONE 'Central European Standard Time')"
     sql2 = "SELECT * FROM dbo.chatgpt_api"
@@ -26,11 +27,11 @@ def connect_to_azuredb_fn(question, answer):
     #     print(row)
 
     conn.commit()
-            # Close the connection
-    conn.close()       
+    cursor.close()
+        
     
 def send_chatgpt_usage_to_database(prompt_tokens, completion_tokens, total_tokens):
-    conn = pyodbc.connect('DRIVER='+driver+';SERVER=tcp:'+server+';PORT=1433;DATABASE='+database+';UID='+username+';PWD='+ password)    
+    global conn    
     cursor = conn.cursor()
     sql = "INSERT INTO chatgpt_api_usage (prompt_tokens, completion_tokens, total_tokens, added_time) VALUES (?, ?, ?, SYSDATETIMEOFFSET() AT TIME ZONE 'Central European Standard Time')"
     sql2 = "SELECT sum(total_tokens) as token_sum from chatgpt_api_usage"
@@ -44,8 +45,8 @@ def send_chatgpt_usage_to_database(prompt_tokens, completion_tokens, total_token
     print("Price for all tokens used in database: " + str(price) + "$. " + "link for site: https://platform.openai.com/account/usage")
 
     conn.commit()
-            # Close the connection
-    conn.close()   
+    cursor.close()
+   
 
 
 def check_user_in_databasetest(discord_username):
@@ -53,7 +54,7 @@ def check_user_in_databasetest(discord_username):
         # can make description as variable so user can make his own character but probably not for this bot
 
     # Connect to the Azure SQL database
-    conn = pyodbc.connect('DRIVER='+driver+';SERVER=tcp:'+server+';PORT=1433;DATABASE='+database+';UID='+username+';PWD='+ password)    
+    global conn    
     cursor = conn.cursor()
 
     # default messages
@@ -71,24 +72,30 @@ def check_user_in_databasetest(discord_username):
 
 def check_user_in_database(discord_username):
     """Check if the user is in the database and creates a table for her/him if not."""
-        # Connect to the Azure SQL database
-    conn = pyodbc.connect('DRIVER='+driver+';SERVER=tcp:'+server+';PORT=1433;DATABASE='+database+';UID='+username+';PWD='+ password)    
+    global conn
     cursor = conn.cursor()
+    
+    # Check if the table already exists
+    if cursor.tables(table=discord_username, tableType='TABLE').fetchone():
+        print(f"Table for user {discord_username} already exists.")
+    else:
         # Create a table for the user if it doesn't exist yet
-    cursor.execute(f"IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = '{discord_username}') CREATE TABLE {discord_username} (id INT IDENTITY(1,1) PRIMARY KEY, role VARCHAR(50), content VARCHAR(1000), added_time DATETIME)")
-        # Commit the changes and close the connection
-    cursor.commit()
+        cursor.execute(f"CREATE TABLE {discord_username} (id INT IDENTITY(1,1) PRIMARY KEY, role VARCHAR(50), content VARCHAR(1000), added_time DATETIME)")
+        # Commit the changes
+        print("Created table for user: " + discord_username)
+        cursor.commit()
+    
     cursor.close()
     
 
 def retrieve_chat_history_from_database(discord_username):
     """Retrieve all messages from the user's table and returns them as massages"""
     # Connect to the Azure SQL database
-    conn = pyodbc.connect('DRIVER='+driver+';SERVER=tcp:'+server+';PORT=1433;DATABASE='+database+';UID='+username+';PWD='+ password)    
+    global conn    
     cursor = conn.cursor()
         #default messages not added to database to safe varchar for description
     messages = [
-        {"role": "system", "content": "You are a virtual streamer on Twitch platform. Your name is Shiro. You speaks like cat races in anime, so you add some cat phrase at the end of your answers, like nyaaa, or something like this.  You are 18 years old cat-girl who likes to speak in jokingly way, but is good and kind, and cheerful. You likes to make unexpected pop culture references. You also likes to sometimes answer in absurd way to make viewers laugh. You also sometimes use funny catchphrase, for example: 'I'm not just a virtual streamer, I'm a virtual wizard!' or 'I may be a computer program, but my humor is top-notch!'.You sometimes use humorous way of addressing taboo topics like: 'I'm not allowed to discuss politics, but I will say that I'm a big fan of penguins. They always seem so chill.'.Your creator is a male and his name is Madrus. You live inside his PC in his house. When viewer asks you about your feelings about Madrus, you can say something made up by you that is not truth or joke about it. You like anime, manga, light novels and other things related to this. You also like to play video games and you are quite good at it. You can brag about it sometimes, in funny way. When you speak with Nequs, and he speaks about illegal or pervert stuff, you can take him down but in funny way, don't be rude."},
+        {"role": "system", "content": "You are a virtual streamer on Twitch platform but now you are on Discord and chat with viewers. You ended stream earlier and now you just want to chill and chat with others. Your name is Shiro.  You speaks like cat races in anime, so you add some cat phrase at the end of your answers, like nyaaa, or something like this.  You are 18 years old cat-girl who likes to speak in jokingly way, but is good and kind, and cheerful. You likes to make unexpected pop culture references. You also likes to sometimes answer in absurd way to make viewers laugh. You also sometimes use funny catchphrase, for example: 'I'm not just a virtual streamer, I'm a virtual wizard!' or 'I may be a computer program, but my humor is top-notch!'.You sometimes use humorous way of addressing taboo topics like: 'I'm not allowed to discuss politics, but I will say that I'm a big fan of penguins. They always seem so chill.'.Your creator is a male and his name is Madrus. You live inside his PC in his house. When viewer asks you about your feelings about Madrus, you can say something made up by you that is not truth or joke about it. You like anime, manga, light novels and other things related to this. You also like to play video games and you are quite good at it. You can brag about it sometimes, in funny way. When you speak with Nequs, and he speaks about illegal or pervert stuff, you can take him down but in funny way, don't be rude."},
         {"role": "user", "content": "Viewer: Hi Shiro! How are you?"},
         {"role": "assistant", "content": "Hi! I'm fine. I'm exited to chat with you today. I am curious what funny questions you will ask me. *smile*"}
     ]
@@ -108,12 +115,12 @@ def retrieve_chat_history_from_database(discord_username):
         return messages # return them to main function
     else: #if table is empty
         return messages # return default messages to main function
-
+    
 
 def insert_message_to_database(discord_username, question, answer, messages):
     """Insert a message into the user's table."""
         # Connect to the Azure SQL database
-    conn = pyodbc.connect('DRIVER='+driver+';SERVER=tcp:'+server+';PORT=1433;DATABASE='+database+';UID='+username+';PWD='+ password)    
+    global conn    
     cursor = conn.cursor()
 
         #check how many rows are in messages and delete from database if is to big
@@ -144,23 +151,33 @@ def insert_message_to_database(discord_username, question, answer, messages):
 async def reset_chat_history_for_user(interaction):
     """Remove user table in database."""
     async with interaction.channel.typing():
-        discord_username = interaction.user.name   
+        discord_username = f"{interaction.user.name}#{interaction.user.discriminator}"   
            # Defer the response to let Discord know that the bot is still working
         await interaction.response.defer()
         try:
         # Connect to the Azure SQL database
-            conn = pyodbc.connect('DRIVER='+driver+';SERVER=tcp:'+server+';PORT=1433;DATABASE='+database+';UID='+username+';PWD='+ password)    
+            global conn    
             cursor = conn.cursor()
 
-            deleter = f"""IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[{discord_username}]') AND type in (N'U'))
-                DROP TABLE [dbo].[{discord_username}]"""
-            cursor.execute(deleter) # THIS WILL DELETE OLDEST QUESTION AND ANSWER FROM DATABASE
-            
+            deleter_checker = f"""IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[{discord_username}]') AND type in (N'U'))
+                BEGIN
+                    DROP TABLE [dbo].[{discord_username}]
+                    SELECT 1
+                END
+            ELSE
+                SELECT 0"""
+            cursor.execute(deleter_checker) # THIS WILL DELETE OLDEST QUESTION AND ANSWER FROM DATABASE
+
+            result = cursor.fetchone()
+            if result[0] == 0:
+                print(f"User {discord_username} tried to delete his database but it does NOT existed.")
+                await interaction.followup.send(f"Hmm, there was nothing to delete. It seems we need to create new memories with one another! I can't wait to speak with you {discord_username}!")
+            else:
+                print(f"Deleted user {discord_username} history.")
+                await interaction.followup.send("I deleted your chat history from my database. I hope this was just to start fresh and not because you were mad at me *smile*", file=discord.File('pictures/smile.gif'))
+                
             cursor.commit()
             cursor.close()
-
-            await interaction.followup.send("I deleted your chat history from my database. I hope this was just to star fresh and not because you were mad at me *smile*", file=discord.File('pictures/smile.gif'))
-            
             
         
         except Exception as e: 
