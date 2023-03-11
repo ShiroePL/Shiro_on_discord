@@ -5,8 +5,8 @@ import pyodbc
 import api_keys
 import play_audio as play_audio
 from discord.ext import commands
-import bot_askshiro_voice
-import bot_askshiro_text
+import askshiro_voice
+import askshiro_text
 from embeds.introduce_embed import introduce_embed_fn
 from db_config import conn
 
@@ -27,6 +27,31 @@ async def on_ready():
         print("------")
     except Exception as e:
         print(e)
+
+@bot.event
+async def on_voice_state_update(member, before, after): #FOR VOICE CONVERSATION
+    if member == bot.user:
+        # ignore events triggered by the bot itself
+        return
+
+    # check if the member is joining or leaving a channel
+    if before.channel != after.channel:
+        print(f"{member.display_name} has joined/ left the voice channel {after.channel.name}.")
+
+    
+
+    print(f"Before: {before.self_mute}")
+    print(f"After: {after.self_mute}")
+        # check if the member is currently muted
+    if before.self_mute == True and after.self_mute == False: #from mute to unmute START RECORDING      
+        print(f"{member.display_name} UNMUTED, RECORD HIM kiki!.") 
+        
+        # Get the guild and voice client objects      
+    elif before.self_mute == False and after.self_mute == True: #from unmute to mute STOP RECORDING
+        print(f"{member.display_name} MUTED, KIKI, save audio and I'll begin my work :).")
+        askshiro_voice.handle_openai_response_voice
+
+
 
 
 @bot.tree.command(name="introduce") #introduce embed
@@ -61,12 +86,18 @@ async def shock_2(interaction: discord.Interaction):
 @bot.tree.command(name="askshiro")
 async def askshiro(interaction: discord.Interaction, question: str):
      # Schedule a coroutine to handle the OpenAI response
-    bot.loop.create_task(bot_askshiro_text.handle_openai_response_text(interaction, question))
+    bot.loop.create_task(askshiro_text.handle_openai_response_text(interaction, question))
 
 @bot.tree.command(name="askshiro_with_voice")
 async def askshiro_with_voice(interaction: discord.Interaction, question: str):
      # Schedule a coroutine to handle the OpenAI response
-    bot.loop.create_task(bot_askshiro_voice.handle_openai_response_voice(interaction, question))
+    bot.loop.create_task(askshiro_voice.handle_openai_response_voice(interaction, question))
+
+@bot.tree.command(name="join_voice")
+async def join_voice(interaction: discord.Interaction):
+     # Schedule a coroutine to handle the OpenAI response
+    user = interaction.user
+    await user.voice.channel.connect()
 
     
 @bot.command(name='shutdown')
@@ -88,3 +119,20 @@ async def on_shutdown():
     global conn
     if conn is not None:
         conn.close()
+
+@bot.event
+async def on_message(message):
+    # check if the message is from the first bot
+    first_bot_id = "1063830555403223100"
+    if message.author.id == first_bot_id:
+        # get the command to run
+        command = message.content
+
+        # run the command and get the output
+        ctx = await bot.get_context(message)
+        output = await bot.invoke(ctx)
+
+        # send the output to the designated channel
+        designated_channel_id = "1076207973904433216"
+        designated_channel = bot.get_channel(designated_channel_id)
+        await designated_channel.send(output)
