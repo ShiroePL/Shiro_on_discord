@@ -41,7 +41,7 @@ async def handle_openai_response_text(interaction, question):
                     connect_to_azuredb.insert_message_to_database(discord_username, question, censored, messages)
                     connect_to_azuredb.connect_to_azuredb_fn(question_to_db, censored)
                     connect_to_azuredb.send_chatgpt_usage_to_database(prompt_tokens, completion_tokens, total_tokens)
-                    await interaction.followup.send(censored)
+                    await interaction.followup.send("Hmm, my answer contains some censored words so I will not say it aloud. *writing on paper*: \n" + censored)
                     print("---------------------------------")
             else:
                 await interaction.followup.send("Please don't use bad words in questions! I can't answer to that.", file=discord.File('pictures/shock_2.gif'))

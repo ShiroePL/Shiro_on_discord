@@ -9,6 +9,9 @@ import askshiro_voice
 import askshiro_text
 from embeds.introduce_embed import introduce_embed_fn
 from db_config import conn
+import asyncio
+import kiki_hub.request_whisper as request_whisper
+stored_interaction = None
 
 
 bot = commands.Bot(command_prefix='!', intents=discord.Intents.all())
@@ -35,8 +38,8 @@ async def on_voice_state_update(member, before, after): #FOR VOICE CONVERSATION
         return
 
     # check if the member is joining or leaving a channel
-    if before.channel != after.channel:
-        print(f"{member.display_name} has joined/ left the voice channel {after.channel.name}.")
+    #if before.channel != after.channel:
+        #print(f"{member.display_name} has joined/ left the voice channel {after.channel.name}.")
 
     
 
@@ -44,15 +47,24 @@ async def on_voice_state_update(member, before, after): #FOR VOICE CONVERSATION
     print(f"After: {after.self_mute}")
         # check if the member is currently muted
     if before.self_mute == True and after.self_mute == False: #from mute to unmute START RECORDING      
-        print(f"{member.display_name} UNMUTED, RECORD HIM kiki!.") 
-        
+        print(f"{member.display_name}#{member.discriminator} UNMUTED, RECORD HIM kiki!.") 
+       
+
         # Get the guild and voice client objects      
-    elif before.self_mute == False and after.self_mute == True: #from unmute to mute STOP RECORDING
-        print(f"{member.display_name} MUTED, KIKI, save audio and I'll begin my work :).")
-        askshiro_voice.handle_openai_response_voice
+    elif before.self_mute == False and after.self_mute == True:
+        user = f"{member.display_name}#{member.discriminator}" #from unmute to mute STOP RECORDING
+        print(f"{user} MUTED, KIKI, save audio and I'll begin my work :).")
+        
+        await asyncio.sleep(2)  #wait for kiki to save file
+        question = request_whisper.transcribe_audio_question() #transcribe audio to text
+        await askshiro_voice.handle_openai_response_voice(question, stored_interaction) #do the rest
+        
 
-
-
+@bot.tree.command(name="say_hello")
+async def say_hello(interaction: discord.Interaction):
+    global stored_interaction
+    stored_interaction = interaction
+    await interaction.response.send_message("Ok, now I'm ready to speak to you with my cute voice.")
 
 @bot.tree.command(name="introduce") #introduce embed
 async def introduce(interaction: discord.Interaction):
@@ -91,7 +103,7 @@ async def askshiro(interaction: discord.Interaction, question: str):
 @bot.tree.command(name="askshiro_with_voice")
 async def askshiro_with_voice(interaction: discord.Interaction, question: str):
      # Schedule a coroutine to handle the OpenAI response
-    bot.loop.create_task(askshiro_voice.handle_openai_response_voice(interaction, question))
+    bot.loop.create_task(askshiro_voice.handle_openai_response_voice(question, interaction))
 
 @bot.tree.command(name="join_voice")
 async def join_voice(interaction: discord.Interaction):
