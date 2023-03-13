@@ -22,7 +22,9 @@ recording.wav
 # Private Node Modules
 node_modules/
 creds.js
-
+alias.wav
+question.wav
+response.wav
 # Private Files
 *.json
 *.csv
