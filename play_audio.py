@@ -1,12 +1,4 @@
-from playsound import playsound
 
-
-def play_audio_fn():
-    try:
-        playsound('response.wav')
-        print("Playing voice")
-    except:
-        print("Error or ended reading audio.")
 
 
 import pygame
@@ -24,6 +16,6 @@ import pygame
 # def play_audio_fn():
 #     sound = AudioSegment.from_wav("./azure_tts/response.wav")
 #     play(sound)
-
-play_audio_fn()
+if __name__ == "__main__":
+    pass
 #play_audio_fn()

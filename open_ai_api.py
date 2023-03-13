@@ -15,11 +15,11 @@ prompt = """User: Can you describe yourself? ->"""
 def send_to_openai(prompt):
     # Make the API request
     response = openai.Completion.create(
-        engine=api_keys.model,
+        engine="text-curie-001",
         prompt=prompt,
         max_tokens=200,
         n=1,
-        stop=["\n"],
+        stop=None,
         temperature=0.4
         #top_p = 0.2
     )

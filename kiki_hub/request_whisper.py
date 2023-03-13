@@ -14,7 +14,7 @@ def transcribe_audio_question():
             "transcribe",
             "gpu",
             "en",
-            "small.en",
+            "base.en",
             {"name": "recording.wav", "data": f"data:audio/wav;base64,{audio_data}"},
             {"name": "recording.wav", "data": f"data:audio/wav;base64,{audio_data}"}
         ]
@@ -30,7 +30,8 @@ def transcribe_audio_question():
 
 #give me __main
 if __name__ == "__main__":
-    transcribe_audio_question()
+    pass
+    #transcribe_audio_question()
 
 #MODELS:
 # tiny

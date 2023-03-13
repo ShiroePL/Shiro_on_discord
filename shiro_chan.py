@@ -132,19 +132,3 @@ async def on_shutdown():
     if conn is not None:
         conn.close()
 
-@bot.event
-async def on_message(message):
-    # check if the message is from the first bot
-    first_bot_id = "1063830555403223100"
-    if message.author.id == first_bot_id:
-        # get the command to run
-        command = message.content
-
-        # run the command and get the output
-        ctx = await bot.get_context(message)
-        output = await bot.invoke(ctx)
-
-        # send the output to the designated channel
-        designated_channel_id = "1076207973904433216"
-        designated_channel = bot.get_channel(designated_channel_id)
-        await designated_channel.send(output)
