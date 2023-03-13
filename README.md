@@ -1,46 +1,34 @@
-# 1. Shiro-AIchan
+# 1. ShiroAi-chan and her friend Kiki-chan
 
-![Screenshot](pictures/new_queen_on_chair.png)
-
-### My attempt to create my anime waifu with [Live2d] avatar
+![Screenshot](pictures/shiro_chan.png)
+![Screenshot](pictures/kiki_chan.png)
+### My attempt to create my anime waifu discord bot that can write and speak in cute voice.
 
 ### Description:
-AI anime waifu with [Live2d] avatar, using transformer chatbot model, [Azure TTS], [Vtube studio] to use, animate and show my cute girl :smiling_face_with_three_hearts: For now I will use [Vtube studio] to play [Live2d] model because I don't get [Live2d] SDK and this app is really good. (free on Steam) 
-For now I want to run all pieces separately without gluing it together and if it will work in acceptable state, I will think of compiling all stuff (except avatar related things) to one program on windows.
+Discord bot, or as it is now duet of bots. ShiroAi-chan is a Virtual streamer on Twitch platform but now she is just chatting on Discord. She uses [ChatGPT API] as her brain and [Azure TTS] as her voice. Unfortunately I encountered a problem when I was working on her speech capabilities and I needed to use second bot to record questions on voice channel. Now ShiroAi-chan has a friend Kiki-chan that is kind of her interpreter.
 
-## List to do:
-### 1. Give her some brain! :brain:
-* **a) [ X ]** Get a fine-tuned model for generating prompts. Currently Pygmalion 2.3B. In plans DialoGPT for simple prompts.
-* **b) [ X ]** Run model using [KoboldAI] (and maybe [Gradio]) for pygmalion. For DialoGPT just API to Hugging Face.
-* **c) [ X ]** ~~I need to understand and implement [KoboldAI], or if not, [Gradio] API to send prompts to model.~~ No need for API. I will just use [KoboldAI] then Gradio interface from [KoboldAI] to converse with her. To much hassle to make interface when this one is really good.
-  * **[ . ]** I needed to clear prompt from gradio to delete *thoughts* from responses and some other cleaning.
-    * Simple cleaning done but to completely clean responses I would need to converse A LOT to see all possibilities.
-* **d) [ . ]** I need to find and implement model for recognizing emotions in prompts. 
+### Her personality
+* As for now she is Virtual streamer on Twitch platform that is off work and just chat on Discord with viewers. She is cat-girl and likes to answer with cat-style words. She is cheerful and likes joking.
+  
+## Some steps that she uses
+### 1. Writing
+* She uses [ChatGPT API] to generate responses.
+* She has some slash commands to interact with her.
 
-### 2. Need to make her pretty :heart_eyes:
-* **a) [ X ]** Get a [Live2d] model. Currently using free Hikari model obtained in [Vtube studio]. 
-* **b) [ . ]** I need to make some animations for model, maybe some expressions too. Easily done in [Vtube studio].
-* **c) [ X ]** Lip sync to audio files to make her talk :D 
-* **d) [ . ]** ***HARD PART!*** Somehow I need to analyze prompt or audio file to associate it with emotions, like happy, sad, angry. Then I will send API request to [Vtube studio] with animation based on the prompt emotions. Probably best to use model to analyze audio, but then [Azure TTS] needs to generate good audio for model to be able to recognize emotions. If it will no work then I will search or fine-tune model for extracting emotions based on text. Maybe Compiling both will give better results?  
-* **e) [ X ]** Implement API for [Vtube studio] to send requests triggering animations/expressions.
-* **)f [ . ]** I can add [Stable diffusion] to generate background for scene and send API to [Vtube studio] to apply it. ***BUT*** It will need some analysis of response to pick fitting scenery. ([KoboldAI] has something like this, I need to look it up. :roll_eyes: )
+
+### 2. Her memory :heart_eyes:
+* She uses [Azure SQL Database] to store her memories. She can remember up to 4 last questions, more is too expensive using [ChatGPT API].
+* Every user has his own table in database and can reset it with command.
+
 
 ### 3. Give her voice! :microphone:
 * **a) [ X ]** Using Microsoft [Azure TTS], send API with generated prompts to get audio file.
-* **b) [ . ]** ~~***BUT! HARD PART!*** If I want to get good responses with more human-like flavour I need to learn and understand Speech Synthesis Markup Language (**SSML**). It gives options to fine-tune the text-to-speech output attributes such as pitch, pronunciation, speaking rate, volume, and more. (this part after testing with normal audio)~~ No need for advanced SSML. I found settings of pitch and which voice is almost identical to Neuro-sama, my inspiration for getting into AI stuff.
-* **c) [ X ]** Then I need to figure out how to play file after API request to [Vtube studio] trigger animations ~~(2s in avg.)~~ (it just starts when API from [Vtube studio] will send back json file which means animation is triggered). [Vtube studio] plugin is using windows audio output as Lip sync reference.
-* **d) [ . ]** Not necessary but nice feature. I can use Speech-to-text to say prompts. (Azure has it) 
+
 
 ### 4. Some communications is needed :blush:
-* **a) [ X ]** I can use web to show input and log from conversation or ~~build application on windows.~~ (web is easier for me) If I will use Speech-to-text, it needs to be added to site/app.
-  * **aa) [ X ]** I need to add integration to [Azure TTS] service (speech-to-text in future) to send API request and receive audio file, then play it on web, ~~probably need to make 2s delay~~ then wait for [Vtube studio] API to arrive 
-  * **ab) [ X ]** In the same time I need to send API request to [Vtube studio] to load animation.
+* **a) [ X ]** I can use web to show input and log from conversation or ~~build application on windows.~~ (web is easier for me) If I will use Speech-to-text, 
 
 
-### 5. Give her memory! :monocle_face:
-* **a) [ . ]** I can add database integration to save log story. I'm thinking about Azure database but local database, like Postgress probably will be faster.
-  * ***SUPER HARD*** I could connect database to gradio for some long memory but it will be hard to pick important information from log history.  
-  * **[ . ]** If I use another like DialoGPT then I need to use database do save log history.
 
 ### Instructions for me:
 1. To run Pygmalion locally: 
@@ -100,21 +88,15 @@ some raw thoughs: I NOW KNOW how to build request APi to koboldAI. Gradio is goo
 
 ## Links 
 
-[Vtube studio] : https://denchisoft.com/
+[ChatGPT API] : https://openai.com/blog/introducing-chatgpt-and-whisper-apis
 
-[KoboldAI] : https://github.com/KoboldAI/KoboldAI-Client
-
-[Live2d] : https://www.live2d.com/en/about/
+[Azure SQL Database] : https://azure.microsoft.com/en-us/products/azure-sql/database
 
 [Azure TTS] : https://azure.microsoft.com/en-us/products/cognitive-services/text-to-speech/
 
-[Gradio] : https://gradio.app/
 
-[Stable diffusion] : https://huggingface.co/stabilityai/stable-diffusion-2-1
 
-[KoboldAI]: https://github.com/KoboldAI/KoboldAI-Client
-[Vtube studio]: https://denchisoft.com/
-[Live2d]: https://www.live2d.com/en/about/
+[Azure SQL Database]: https://azure.microsoft.com/en-us/products/azure-sql/database
+[ChatGPT API]: https://openai.com/blog/introducing-chatgpt-and-whisper-apis
 [Azure TTS]: https://azure.microsoft.com/en-us/products/cognitive-services/text-to-speech/
-[Gradio]: https://gradio.app/
-[Stable diffusion]: https://huggingface.co/stabilityai/stable-diffusion-2-1
+
