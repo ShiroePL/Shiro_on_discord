@@ -1,6 +1,6 @@
 # 1. ShiroAi-chan and her friend Kiki-chan
 ![Screenshot](pictures/kiki_chan.png)
-![Screenshot](pictures/shiro_chan.png)
+
 
 ### My attempt to create my anime waifu discord bot that can write and speak in cute voice.
 
