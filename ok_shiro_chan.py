@@ -1,76 +1,114 @@
-import openai
-
 import speech_recognition as sr
 import pyttsx3
 import time 
+import kiki_hub.request_whisper as request_whisper
+from playsound import playsound
+import base64
+import requests
+import os
+import wave
+import pyaudio
+import connect_to_azuredb
+import pyodbc
+import api_keys
+import winsound
+import asyncio
+import subprocess
 
-
-# Initialize OpenAI API
-#openai.api_key = "your key in open AI APi"
 # Initialize the text to speech engine 
 engine=pyttsx3.init()
 
+def transcribe_audio_question(filename):
+    start_time = time.time()
+    # Load audio file as base64 encoded string
+    with open(f"./kiki_hub/{filename}.wav", "rb") as audio_file:
+        audio_data = base64.b64encode(audio_file.read()).decode("utf-8")
 
-def transcribe_audio_to_test(filename):
-    recogizer=sr.Recognizer()
-    with sr.AudioFile(filename)as source:
-        audio=recogizer.record(source) 
-    try:
-        return recogizer.recognize_google(audio)
-    except:
-        print("skipping unkown error")
+    response = requests.post("http://127.0.0.1:7860/run/predict", json={
+        "data": [
+            "transcribe",
+            "gpu",
+            "en",
+            "base.en",
+            {"name": "{filename}.wav", "data": f"data:audio/wav;base64,{audio_data}"},
+            {"name": "{filename}.wav", "data": f"data:audio/wav;base64,{audio_data}"}
+        ]
+    }).json()
 
-def generate_response(prompt):
-    response= openai.completion.create(
-        engine="text-davinci-003",
-        prompt=prompt,
-        max_tokens=200,
-        n=1,
-        stop=None,
-        temperature=0.5,
-    )
-    return response ["Choices"][0]["text"]
+    question = response["data"][0]
+    print("-------") 
+    print("text from audio question: " + question)
+    end_time = time.time()
+    print("time elapsed on transcription: " + str(end_time - start_time))
+    print("-------")
+    return question
 
-def speak_text(text):
-    engine.say(text)
-    engine.runAndWait()
+
+def play_audio_fn(filename):
+    chunk = 1024
+    wf = wave.open(f'./kiki_hub/{filename}.wav', 'rb')
+    p = pyaudio.PyAudio()
+    stream = p.open(format=p.get_format_from_width(wf.getsampwidth()),
+                    channels=wf.getnchannels(),
+                    rate=wf.getframerate(),
+                    output=True)
+    data = wf.readframes(chunk)
+    while data:
+        stream.write(data)
+        data = wf.readframes(chunk)
+    stream.stop_stream()
+    stream.close()
+    p.terminate()
+    print("Playing voice")
+
+
 
 def main():
+    #input your name
+    print("What is your name?: ")
+    name = input()
+
+    
     while True:
-        #Waith for user say "genius"
-        print("Say 'Genius' to start recording your question")
+        #Wait for user to say "pathfinder"
+        print("Say 'pathfinder' to start recording your question")
         with sr.Microphone() as source:
-            recognizer=sr.Recognizer()
-            audio=recognizer.listen(source)
+            recognizer = sr.Recognizer()
+            audio = recognizer.listen(source)
+            alias = "alias"
+            transcribed = f"./kiki_hub/{alias}.wav"
+            with open(transcribed, "wb") as f:
+                f.write(audio.get_wav_data())
+            f.close()  
             try:
-                transcription = recognizer.recognize_google(audio)
-                if transcription.lower()=="Genius":
-                    #record audio
-                    filename ="genius.wav"
+                transcription = transcribe_audio_question(alias) #make transcription from alias file
+                if transcription.rstrip('.,?!').replace(' ', '').lower() == "pathfinder":
+                        #record audio
+                    question_file = "question"
+                    filename = f"./kiki_hub/{question_file}.wav"
                     print("Say your question")
+                    beep = "cute_beep"
+                    play_audio_fn(beep)
                     with sr.Microphone() as source:
-                        recognizer=sr.recognize()
-                        source.pause_threshold=1
-                        audio=recognizer.listen(source,phrase_time_limit=None,timeout=None)
-                        with open(filename,"wb")as f:
+                        recognizer = sr.Recognizer()
+                        source.pause_threshold = 1
+                        audio = recognizer.listen(source, phrase_time_limit=None, timeout=None)
+                        with open(filename, "wb") as f:
                             f.write(audio.get_wav_data())
-                            
-                            
-                        
-                        
-                    #transcript audio to test 
-                    text=transcribe_audio_to_test(filename)
+                        f.close()           
+                    #transcript audio to text 
+                    text = transcribe_audio_question(question_file)
                     if text:
-                        print(f"yuo said {text}")
-                        
+                        print(f"you said {text}")
+                        play_audio_fn(question_file)
                         #Generate the response
-                        response = generate_response(text)
-                        print(f"chat gpt 3 say {response}")
+                        # response = open_ai_api.send_to_openai(text)
+                        # print(f"chat gpt 3 say {response}")
                             
-                        #read resopnse using GPT3
-                        speak_text(response)
+                        #read response using GPT3
+                        #speak_text(response)
             except Exception as e:
-                
-                print("An error ocurred : {}".format(e))
-if __name__=="__main__":
+                print("An error occurred: {}".format(e))
+
+if __name__ == "__main__":
     main()
